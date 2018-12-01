@@ -19,10 +19,11 @@ func init() {
 var configInitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new database",
-	Long: `Initialize a new database to use with File Browser. All of this
-options can be changed in the future with the command "TODO". The
-user related flags apply to the defaults when creating
-new users and you don't override the options.`,
+	Long: `Initialize a new database to use with File Browser. All of
+this options can be changed in the future with the command
+"filebrowser config set". The user related flags apply
+to the defaults when creating new users and you don't
+override the options.`,
 	Args: cobra.NoArgs,
 	Run:  initDatabase,
 }
