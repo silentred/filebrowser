@@ -3,9 +3,13 @@ module github.com/filebrowser/filebrowser
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/DataDog/zstd v1.3.4 // indirect
+	github.com/GeertJohan/go.incremental v0.0.0-20161212213043-1172aab96510 // indirect
+	github.com/GeertJohan/go.rice v0.0.0-20170420135705-c02ca9a983da
 	github.com/Sereal/Sereal v0.0.0-20180905114147-563b78806e28 // indirect
+	github.com/akavel/rsrc v0.0.0-20170831122431-f6a15ece2cfd // indirect
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/boltdb/bolt v1.3.1 // indirect
+	github.com/daaku/go.zipexe v0.0.0-20150329023125-a5fe2436ffcb // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76 // indirect
@@ -16,6 +20,8 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/hacdias/fileutils v0.0.0-20171121222743-76b1c6ab9067
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jessevdk/go-flags v1.4.0 // indirect
+	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/maruel/natural v0.0.0-20180416170133-dbcb3e2e8cf1
 	github.com/mholt/archiver v3.1.0+incompatible

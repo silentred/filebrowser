@@ -21,6 +21,15 @@ func (e *Env) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (e *Env) signupHandler(w http.ResponseWriter, r *http.Request) {
+	if !e.Settings.Signup {
+		httpErr(w, http.StatusForbidden, nil)
+		return
+	}
+
+	// TODO: fill me
+}
+
 type authToken struct {
 	UserID uint
 	jwt.StandardClaims

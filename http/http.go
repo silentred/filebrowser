@@ -28,20 +28,23 @@ type Env struct {
 func Handler(e *Env) http.Handler {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/login", e.loginHandler)
+	api := r.PathPrefix("/api").Subrouter()
+	api.HandleFunc("/login", e.loginHandler)
+	api.HandleFunc("/signup", e.signupHandler)
 
-	users := r.PathPrefix("/api/users").Subrouter()
+	users := api.PathPrefix("/users").Subrouter()
 	users.HandleFunc("", e.auth(e.usersGetHandler)).Methods("GET")
 	users.HandleFunc("", e.auth(e.userPostHandler)).Methods("POST")
 	users.HandleFunc("/{id:[0-9]+}", e.auth(e.userPutHandler)).Methods("PUT")
 	users.HandleFunc("/{id:[0-9]+}", e.auth(e.userGetHandler)).Methods("GET")
 	users.HandleFunc("/{id:[0-9]+}", e.auth(e.userDeleteHandler)).Methods("DELETE")
 
-	r.PathPrefix("/api/resources").HandlerFunc(e.auth(e.resourceGetHandler)).Methods("GET")
-	r.PathPrefix("/api/resources").HandlerFunc(e.auth(e.resourceDeleteHandler)).Methods("DELETE")
-	r.PathPrefix("/api/resources").HandlerFunc(e.auth(e.resourcePostPutHandler)).Methods("POST")
-	r.PathPrefix("/api/resources").HandlerFunc(e.auth(e.resourcePostPutHandler)).Methods("PUT")
-	r.PathPrefix("/api/resources").HandlerFunc(e.auth(e.resourcePatchHandler)).Methods("PATCH")
+	api.PathPrefix("/resources").HandlerFunc(e.auth(e.resourceGetHandler)).Methods("GET")
+	api.PathPrefix("/resources").HandlerFunc(e.auth(e.resourceDeleteHandler)).Methods("DELETE")
+	api.PathPrefix("/resources").HandlerFunc(e.auth(e.resourcePostPutHandler)).Methods("POST")
+	api.PathPrefix("/resources").HandlerFunc(e.auth(e.resourcePostPutHandler)).Methods("PUT")
+	api.PathPrefix("/resources").HandlerFunc(e.auth(e.resourcePatchHandler)).Methods("PATCH")
+
 	return r
 }
 
