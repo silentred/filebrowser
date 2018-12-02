@@ -1,11 +1,14 @@
 package http
 
 import (
+	"strings"
 	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/GeertJohan/go.rice"
 	"github.com/filebrowser/filebrowser/types"
 	"github.com/gorilla/mux"
 )
@@ -24,9 +27,41 @@ type Env struct {
 	Store    *types.Store
 }
 
+func (e *Env) getStaticHandler() http.Handler {
+	box := rice.MustFindBox("../../react/build")
+	handler := http.FileServer(box.HTTPBox())
+
+	// TODO: cleanup this code. generate data previously.
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("x-frame-options", "SAMEORIGIN")
+		w.Header().Set("x-xss-protection", "1; mode=block")
+
+		// TODO: prefix URL
+
+		if _, err := box.Open(r.URL.Path); err != nil {
+			r.URL.Path = "/"
+		}
+
+		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			index := template.Must(template.New("index").Delims("$", "$").Parse(box.MustString("/index.html")))
+			data := map[string]interface{}{"HOMEPAGE": strings.TrimSuffix(e.Settings.BaseURL, "/")}
+			err := index.Execute(w, data)
+			if err != nil {
+				httpErr(w, http.StatusInternalServerError, err)
+			}
+			return
+		}
+
+		handler.ServeHTTP(w, r)
+	})
+}
+
 // Handler ...
 func Handler(e *Env) http.Handler {
 	r := mux.NewRouter()
+
+	r.NotFoundHandler = e.getStaticHandler()
 
 	api := r.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/login", e.loginHandler)
