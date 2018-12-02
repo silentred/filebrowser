@@ -62,7 +62,6 @@ func (e *Env) resourceGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if file.IsDir {
-		// TODO: prefix URL/baseURL
 		scope := "/"
 
 		if sort, order, err := handleSortOrder(w, r, scope); err == nil {
@@ -178,8 +177,6 @@ func (e *Env) resourcePostPutHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
-
-		// TODO: static manager resourcePublishSchedule
 
 		etag := fmt.Sprintf(`"%x%x"`, info.ModTime().UnixNano(), info.Size())
 		w.Header().Set("ETag", etag)

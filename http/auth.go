@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -21,13 +22,59 @@ func (e *Env) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type signupBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func (e *Env) signupHandler(w http.ResponseWriter, r *http.Request) {
 	if !e.Settings.Signup {
 		httpErr(w, http.StatusForbidden, nil)
 		return
 	}
 
-	// TODO: fill me
+	if r.Body == nil {
+		httpErr(w, http.StatusBadRequest, nil)
+		return
+	}
+
+	info := &signupBody{}
+	err := json.NewDecoder(r.Body).Decode(info)
+	if err != nil {
+		httpErr(w, http.StatusBadRequest, nil)
+		return
+	}
+
+	if info.Password == "" || info.Username == "" {
+		httpErr(w, http.StatusBadRequest, nil)
+		return
+	}
+
+	user := &types.User{
+		Username: info.Username,
+		Locale:   e.Settings.Defaults.Locale,
+		Perm:     e.Settings.Defaults.Perm,
+		ViewMode: e.Settings.Defaults.ViewMode,
+		Scope:    e.Settings.Defaults.Scope,
+	}
+
+	pwd, err := types.HashPwd(info.Password)
+	if err != nil {
+		httpErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	user.Password = pwd
+	err = e.Store.Users.Save(user)
+	if err == types.ErrExist {
+		httpErr(w, http.StatusConflict, nil)
+		return
+	} else if err != nil {
+		httpErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	httpErr(w, http.StatusOK, nil)
 }
 
 type authToken struct {

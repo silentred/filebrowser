@@ -75,7 +75,11 @@ func (st UsersStore) Update(user *types.User, fields ...string) error {
 }
 
 func (st UsersStore) Save(user *types.User) error {
-	return st.DB.Save(user)
+	err := st.DB.Save(user)
+	if err == storm.ErrAlreadyExists {
+		return types.ErrExist
+	}
+	return err
 }
 
 func (st UsersStore) Delete(id uint) error {
