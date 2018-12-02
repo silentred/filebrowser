@@ -46,24 +46,31 @@ func (e *Env) usersGetHandler(w http.ResponseWriter, r *http.Request) {
 	renderJSON(w, users)
 }
 
-func (e *Env) userGetHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: maybe a way not to repeat this code
+func (e *Env) userSelfOrAdmin(w http.ResponseWriter, r *http.Request) (*types.User, uint, bool) {
 	user, ok := e.getUser(w, r)
 	if !ok {
-		return
+		return nil, 0, false
 	}
 
 	id, err := getUserID(r)
 	if err != nil {
 		httpErr(w, http.StatusInternalServerError, err)
-		return
+		return nil, 0, false
 	}
 
 	if user.ID != id && !user.Perm.Admin {
 		httpErr(w, http.StatusForbidden, nil)
+		return nil, 0, false
+	}
+
+	return user, id, true
+}
+
+func (e *Env) userGetHandler(w http.ResponseWriter, r *http.Request) {
+	_, id, ok := e.userSelfOrAdmin(w, r)
+	if !ok {
 		return
 	}
-	// /TODO
 
 	u, err := e.Store.Users.Get(id)
 	if err == types.ErrNotExist {
@@ -81,25 +88,12 @@ func (e *Env) userGetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Env) userDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: maybe a way not to repeat this code
-	user, ok := e.getUser(w, r)
+	_, id, ok := e.userSelfOrAdmin(w, r)
 	if !ok {
 		return
 	}
 
-	id, err := getUserID(r)
-	if err != nil {
-		httpErr(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	if user.ID != id && !user.Perm.Admin {
-		httpErr(w, http.StatusForbidden, nil)
-		return
-	}
-	// /TODO
-
-	err = e.Store.Users.Delete(id)
+	err := e.Store.Users.Delete(id)
 	if err == types.ErrNotExist {
 		httpErr(w, http.StatusNotFound, nil)
 		return
