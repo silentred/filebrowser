@@ -55,7 +55,7 @@ func (a JSONAuth) Auth(r *http.Request) (*types.User, error) {
 		return nil, types.ErrNoPermission
 	}
 
-	return a.Store.Get(0)
+	return u, nil
 }
 
 const reCaptchaAPI = "/recaptcha/api/siteverify"
