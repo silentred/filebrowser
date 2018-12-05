@@ -1,12 +1,12 @@
 package http
 
 import (
-	"strings"
 	"encoding/json"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
+	"text/template"
 
 	"github.com/GeertJohan/go.rice"
 	"github.com/filebrowser/filebrowser/types"
@@ -19,6 +19,7 @@ const (
 	keyUserID key = iota
 )
 
+
 // Env ...
 type Env struct {
 	Auther   types.Auther
@@ -27,41 +28,58 @@ type Env struct {
 	Store    *types.Store
 }
 
-func (e *Env) getStaticHandler() http.Handler {
+func (e *Env) getHandlers() (http.Handler, http.Handler) {
 	box := rice.MustFindBox("../../react/build")
 	handler := http.FileServer(box.HTTPBox())
 
-	// TODO: cleanup this code. generate data previously.
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("x-frame-options", "SAMEORIGIN")
-		w.Header().Set("x-xss-protection", "1; mode=block")
+	// TODO: baseurl must always not have the trailing slash
+	data := map[string]interface{}{
+		"Root": strings.TrimSuffix(e.Settings.BaseURL, "/") + "/static/",
+	}
 
-		// TODO: prefix URL
-
-		if _, err := box.Open(r.URL.Path); err != nil {
-			r.URL.Path = "/"
-		}
-
-		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			index := template.Must(template.New("index").Delims("$", "$").Parse(box.MustString("/index.html")))
-			data := map[string]interface{}{"HOMEPAGE": strings.TrimSuffix(e.Settings.BaseURL, "/")}
-			err := index.Execute(w, data)
-			if err != nil {
-				httpErr(w, http.StatusInternalServerError, err)
-			}
+	index := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			httpErr(w, http.StatusNotFound, nil)
 			return
 		}
 
-		handler.ServeHTTP(w, r)
+		w.Header().Set("x-frame-options", "SAMEORIGIN")
+		w.Header().Set("x-xss-protection", "1; mode=block")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		index := template.Must(template.New("index").Delims("$$$$", "$$$$").Parse(box.MustString("/index.html")))
+		err := index.Execute(w, data)
+
+		if err != nil {
+			httpErr(w, http.StatusInternalServerError, err)
+		}
 	})
+
+	static := http.StripPrefix("/static", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/js/bundle.js" {
+			handler.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		index := template.Must(template.New("index").Delims("$$$$", "$$$$").Parse(box.MustString("/js/bundle.js")))
+		err := index.Execute(w, data)
+
+		if err != nil {
+			httpErr(w, http.StatusInternalServerError, err)
+		}
+	}))
+
+	return index, static
 }
 
 // Handler ...
 func Handler(e *Env) http.Handler {
 	r := mux.NewRouter()
 
-	r.NotFoundHandler = e.getStaticHandler()
+	index, static := e.getHandlers()
+
+	r.PathPrefix("/static").Handler(static)
+	r.NotFoundHandler = index
 
 	api := r.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/login", e.loginHandler)
