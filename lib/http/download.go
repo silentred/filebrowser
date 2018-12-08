@@ -12,6 +12,7 @@ import (
 	"github.com/mholt/archiver"
 )
 
+
 // downloadHandler creates an archive in one of the supported formats (zip, tar,
 // tar.gz or tar.bz2) and sends it to be downloaded.
 func downloadHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
@@ -47,6 +48,7 @@ func downloadHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int
 		extension string
 		ar        archiver.Archiver
 	)
+	
 
 	switch query {
 	// If the format is true, just set it to "zip".

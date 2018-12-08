@@ -7,7 +7,6 @@
 Dockerfile
 filebrowser
 rice-box.go
-vendor
 npm-debug.log*
 package-lock.json
 yarn-debug.log*

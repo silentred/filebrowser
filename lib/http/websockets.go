@@ -14,6 +14,7 @@ import (
 
 	fb "github.com/filebrowser/filebrowser/lib"
 	"github.com/gorilla/websocket"
+	"github.com/mattn/go-shellwords"
 )
 
 var upgrader = websocket.Upgrader{
@@ -38,16 +39,22 @@ func command(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error)
 	var (
 		message []byte
 		command []string
+		parseErr error
+		parser = shellwords.NewParser()
 	)
-
+	parser.ParseBacktick = true
 	// Starts an infinite loop until a valid command is captured.
 	for {
 		_, message, err = conn.ReadMessage()
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
+	
+		command, parseErr = parser.Parse(string(message))
+		if parseErr != nil {
+			return 0, parseErr
+		}
 
-		command = strings.Split(string(message), " ")
 		if len(command) != 0 {
 			break
 		}

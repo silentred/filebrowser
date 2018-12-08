@@ -18,8 +18,9 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"fmt"
 
-	"github.com/gohugoio/hugo/parser"
+	"github.com/gohugoio/hugo/hugolib"
 	"github.com/maruel/natural"
 )
 
@@ -192,16 +193,17 @@ func (i *File) GetEditor() error {
 	}
 
 	buffer := bytes.NewBuffer([]byte(i.Content))
-	page, err := parser.ReadFrom(buffer)
+	page := &hugolib.Page{}
+	_, err := page.ReadFrom(buffer)
 
 	// If there is an error, just ignore it and return nil.
 	// This way, the file can be served for editing.
 	if err != nil {
 		return nil
 	}
-
-	i.Content = strings.TrimSpace(string(page.Content()))
-	i.Metadata = strings.TrimSpace(string(page.FrontMatter()))
+	cont, _ := page.Content()
+	i.Content = strings.TrimSpace(fmt.Sprintf("%s", cont))
+	i.Metadata = strings.TrimSpace(fmt.Sprintf("%v", page.PageMeta))
 	return nil
 }
 
